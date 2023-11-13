@@ -87,7 +87,7 @@ class OrderRepository(val dbItem: ItemRepository) {
 		return keyHolder.getKeyAs(UUID::class.java)!!
 	}
 
-	fun updateStatus(merchantId: String, transactionId: UUID, status: OrderStatus): UUID {
+	fun updateStatus(merchantId: String, transactionId: String, status: OrderStatus): UUID {
 		val keyHolder: KeyHolder = GeneratedKeyHolder()
 		jdbcTemplate.update(
 			{ connection ->

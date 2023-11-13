@@ -39,7 +39,7 @@ class OrderService(val dbOrder: OrderRepository, val dbItem: ItemRepository, val
 		itemRequests.forEach { itemRequest ->
 			dbItem.create(transactionUUID, itemRequest)
 		}
-		dbOrder.updateStatus(merchantId, transactionUUID, OrderStatus.SHIPPING)
+		dbOrder.updateStatus(merchantId, transactionUUID.toString(), OrderStatus.SHIPPING)
 		return transactionUUID.toString()
 	}
 
@@ -51,8 +51,10 @@ class OrderService(val dbOrder: OrderRepository, val dbItem: ItemRepository, val
 		dbItem.updateStatus(transactionId, itemId, ItemStatus.SHIPPED)
 		paymentService.makePaymentToMerchant(merchantId, transactionId, itemId)
 		val order = dbOrder.orderByTransactionId(merchantId, transactionId)
-		if (order?.items?.count { it.status == ItemStatus.ORDERED } == 0)
+		if (order?.items?.count { it.status == ItemStatus.ORDERED } == 0) {
+			dbOrder.updateStatus(merchantId, transactionId, OrderStatus.INVOICED_TO_CUSTOMER)
 			invoiceService.claimInvoiceToBuyer(merchantId, transactionId)
+		}
 	}
 
 	@Transactional
@@ -67,6 +69,7 @@ class OrderService(val dbOrder: OrderRepository, val dbItem: ItemRepository, val
 		}
 		if (shippedItemCount > 0)
 			throw AllItemsAlreadyShipped(transactionId)
+		dbOrder.updateStatus(merchantId, transactionId, OrderStatus.INVOICED_TO_CUSTOMER)
 		invoiceService.claimInvoiceToBuyer(merchantId, transactionId)
 	}
 
