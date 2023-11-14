@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.support.GeneratedKeyHolder
 import org.springframework.jdbc.support.KeyHolder
 import org.springframework.stereotype.Repository
+import java.sql.ResultSet
 import java.sql.Timestamp
 import java.util.*
 
@@ -19,46 +20,22 @@ class OrderRepository(val dbItem: ItemRepository) {
 
 	fun orderByTransactionId(merchantId: String, transactionId: String): OrderResponse? {
 		val sql = "SELECT * FROM organisations_schema.orders WHERE merchant_id = ? AND transaction_id = ?"
-		return jdbcTemplate.query(sql, arrayOf(merchantId, transactionId)) { rs, _ ->
-			OrderResponse(
-				transactionId = rs.getObject("id", UUID::class.java),
-				merchantId = rs.getString("merchant_id"),
-				merchantOrderId = rs.getString("merchant_order_id"),
-				buyerId = rs.getString("buyer_id"),
-				status = OrderStatus.valueOf(rs.getString("status")),
-				orderCreatedAt = rs.getTimestamp("order_created_at").toLocalDateTime(),
-				items = dbItem.retrieveItemsByOrder(rs.getObject("id", UUID::class.java))
-			)
+		return jdbcTemplate.query(sql, arrayOf(merchantId, UUID.fromString(transactionId))) { rs, _ ->
+			populateOrderResponse(rs)
 		}.firstOrNull()
 	}
 
 	fun orderByMerchantOrderId(merchantId: String, merchantOrderId: String): OrderResponse? {
 		val sql = "SELECT * FROM organisations_schema.orders WHERE merchant_id = ? AND merchant_order_id = ?"
 		return jdbcTemplate.query(sql, arrayOf(merchantId, merchantOrderId)) { rs, _ ->
-			OrderResponse(
-				transactionId = rs.getObject("id", UUID::class.java),
-				merchantId = rs.getString("merchant_id"),
-				merchantOrderId = rs.getString("merchant_order_id"),
-				buyerId = rs.getString("buyer_id"),
-				status = OrderStatus.valueOf(rs.getString("status")),
-				orderCreatedAt = rs.getTimestamp("order_created_at").toLocalDateTime(),
-				items = dbItem.retrieveItemsByOrder(rs.getObject("id", UUID::class.java))
-			)
+			populateOrderResponse(rs)
 		}.firstOrNull()
 	}
 
 	fun orderBy(merchantId: String): List<OrderResponse> {
 		val sql = "SELECT * FROM organisations_schema.orders WHERE merchant_id = ? "
 		return jdbcTemplate.query(sql, arrayOf(merchantId)) { rs, _ ->
-			OrderResponse(
-				transactionId = rs.getObject("id", UUID::class.java),
-				merchantId = rs.getString("merchant_id"),
-				merchantOrderId = rs.getString("merchant_order_id"),
-				buyerId = rs.getString("buyer_id"),
-				status = OrderStatus.valueOf(rs.getString("status")),
-				orderCreatedAt = rs.getTimestamp("order_created_at").toLocalDateTime(),
-				items = dbItem.retrieveItemsByOrder(rs.getObject("id", UUID::class.java))
-			)
+			populateOrderResponse(rs)
 		}
 	}
 
@@ -106,4 +83,14 @@ class OrderRepository(val dbItem: ItemRepository) {
 		)
 		return keyHolder.getKeyAs(UUID::class.java)!!
 	}
+
+	private fun populateOrderResponse(rs: ResultSet) = OrderResponse(
+		transactionId = rs.getObject("transaction_id", UUID::class.java),
+		merchantId = rs.getString("merchant_id"),
+		merchantOrderId = rs.getString("merchant_order_id"),
+		buyerId = rs.getString("buyer_id"),
+		status = OrderStatus.valueOf(rs.getString("status")),
+		orderCreatedAt = rs.getTimestamp("order_created_at").toLocalDateTime(),
+		items = dbItem.retrieveItemsByOrder(rs.getObject("transaction_id", UUID::class.java))
+	)
 }
