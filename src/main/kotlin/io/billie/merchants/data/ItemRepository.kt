@@ -16,7 +16,7 @@ class ItemRepository {
 	@Autowired
 	lateinit var jdbcTemplate: JdbcTemplate
 
-	fun retrieveItemsByOrder(transactionId: UUID): List<ItemResponse> {
+	fun retrieveItemBy(transactionId: UUID): List<ItemResponse> {
 		val itemSql = "SELECT * FROM organisations_schema.items WHERE transaction_id = ?"
 		return jdbcTemplate.query(itemSql, arrayOf(transactionId)) { rs, _ ->
 			ItemResponse(
@@ -29,7 +29,7 @@ class ItemRepository {
 		}
 	}
 
-	fun retrieveItemByOrder(transactionId: String, itemId: String): ItemResponse? {
+	fun retrieveItemBy(transactionId: String, itemId: String): ItemResponse? {
 		val itemSql = "SELECT * FROM organisations_schema.items WHERE transaction_id = ? and item_id = ?"
 		return jdbcTemplate.query(itemSql, arrayOf(transactionId, itemId)) { rs, _ ->
 			ItemResponse(
@@ -78,25 +78,6 @@ class ItemRepository {
 				ps.setString(1, status.name)
 				ps.setString(2, itemId)
 				ps.setObject(3, transactionId)
-				ps
-			},
-			keyHolder
-		)
-		return keyHolder.getKeyAs(UUID::class.java)!!
-	}
-
-	fun updateStatus(transactionId: String, status: ItemStatus): UUID {
-		val keyHolder: KeyHolder = GeneratedKeyHolder()
-		jdbcTemplate.update(
-			{ connection ->
-				val ps = connection.prepareStatement(
-					"UPDATE organisations_schema.items " +
-							"SET status = ?" +
-							"WHERE transaction_id = ?",
-					arrayOf("id")
-				)
-				ps.setString(1, status.name)
-				ps.setObject(2, transactionId)
 				ps
 			},
 			keyHolder

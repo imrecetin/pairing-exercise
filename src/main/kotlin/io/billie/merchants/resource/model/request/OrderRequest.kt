@@ -6,7 +6,6 @@ import java.time.LocalDateTime
 import javax.validation.constraints.NotBlank
 
 data class OrderRequest(
-
 	@field:NotBlank
 	@JsonProperty("order_id")
 	val orderId: String,

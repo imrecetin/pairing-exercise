@@ -6,7 +6,6 @@ import java.math.BigDecimal
 import java.util.*
 
 data class ItemResponse(
-
 	@JsonProperty("id")
 	val id: UUID,
 

@@ -52,9 +52,9 @@ class OrderServiceTest {
 		val orderResponseList =
 			listOf(sampleOrderResponse(merchantId, "ORD12345678", transactionId), sampleOrderResponse(merchantId, "ORD123456789", transactionId))
 
-		`when`(dbOrder.orderBy(merchantId)).thenReturn(orderResponseList)
+		`when`(dbOrder.ordersBy(merchantId)).thenReturn(orderResponseList)
 
-		val result = orderService.allOrders(merchantId)
+		val result = orderService.ordersBy(merchantId)
 
 		assertEquals(orderResponseList.size, result.size, "Expected and actual list sizes should match")
 	}
@@ -67,7 +67,7 @@ class OrderServiceTest {
 
 		`when`(dbOrder.orderByTransactionId(merchantId, transactionId.toString())).thenReturn(orderResponse)
 
-		val result = orderService.findOrderBy(merchantId, transactionId.toString())
+		val result = orderService.orderBy(merchantId, transactionId.toString())
 
 		assertTrue(result.isPresent)
 		assertTrue(result.get().transactionId == transactionId)
@@ -114,7 +114,7 @@ class OrderServiceTest {
 		val merchantId = "111"
 		val itemId = "I123"
 
-		`when`(dbItem.retrieveItemByOrder(transactionUUID.toString(), itemId)).thenReturn(null)
+		`when`(dbItem.retrieveItemBy(transactionUUID.toString(), itemId)).thenReturn(null)
 
 		assertThrows<OrderedItemNotFound> {
 			orderService.completeShipment(merchantId, transactionUUID.toString(), itemId)
@@ -134,7 +134,7 @@ class OrderServiceTest {
 			status = ItemStatus.SHIPPED
 		)
 
-		`when`(dbItem.retrieveItemByOrder(transactionUUID.toString(), itemId)).thenReturn(itemResponse)
+		`when`(dbItem.retrieveItemBy(transactionUUID.toString(), itemId)).thenReturn(itemResponse)
 
 		assertThrows<ItemAlreadyShipped> {
 			orderService.completeShipment(merchantId, transactionUUID.toString(), itemId)
@@ -156,7 +156,7 @@ class OrderServiceTest {
 		)
 		val orderResponse = sampleOrderResponse(merchantId, "ORD12345678", transactionUUID)
 
-		`when`(dbItem.retrieveItemByOrder(transactionId, itemId.toString())).thenReturn(itemResponse)
+		`when`(dbItem.retrieveItemBy(transactionId, itemId.toString())).thenReturn(itemResponse)
 		`when`(dbOrder.orderByTransactionId(merchantId, transactionId)).thenReturn(orderResponse)
 
 		orderService.completeShipment(merchantId, transactionId, itemId.toString())

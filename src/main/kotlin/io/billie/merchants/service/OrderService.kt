@@ -19,12 +19,12 @@ import java.util.*
 class OrderService(val dbOrder: OrderRepository, val dbItem: ItemRepository, val paymentService: PaymentService, val invoiceService: InvoiceService) {
 
 	@Transactional(readOnly = true)
-	fun allOrders(merchantId: String): List<OrderResponse> {
-		return dbOrder.orderBy(merchantId)
+	fun ordersBy(merchantId: String): List<OrderResponse> {
+		return dbOrder.ordersBy(merchantId)
 	}
 
 	@Transactional(readOnly = true)
-	fun findOrderBy(merchantId: String, transactionId: String): Optional<OrderResponse> {
+	fun orderBy(merchantId: String, transactionId: String): Optional<OrderResponse> {
 		val order = dbOrder.orderByTransactionId(merchantId, transactionId) ?: return Optional.empty()
 		return Optional.of(order)
 	}
@@ -45,7 +45,7 @@ class OrderService(val dbOrder: OrderRepository, val dbItem: ItemRepository, val
 
 	@Transactional
 	fun completeShipment(merchantId: String, transactionId: String, itemId: String) {
-		val item = dbItem.retrieveItemByOrder(transactionId, itemId) ?: throw OrderedItemNotFound(itemId)
+		val item = dbItem.retrieveItemBy(transactionId, itemId) ?: throw OrderedItemNotFound(itemId)
 		if (ItemStatus.ORDERED != item.status)
 			throw ItemAlreadyShipped(itemId)
 		dbItem.updateStatus(transactionId, itemId, ItemStatus.SHIPPED)

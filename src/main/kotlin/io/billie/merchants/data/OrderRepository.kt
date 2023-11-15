@@ -18,6 +18,13 @@ class OrderRepository(val dbItem: ItemRepository) {
 	@Autowired
 	lateinit var jdbcTemplate: JdbcTemplate
 
+	fun ordersBy(merchantId: String): List<OrderResponse> {
+		val sql = "SELECT * FROM organisations_schema.orders WHERE merchant_id = ? "
+		return jdbcTemplate.query(sql, arrayOf(merchantId)) { rs, _ ->
+			populateOrderResponse(rs)
+		}
+	}
+
 	fun orderByTransactionId(merchantId: String, transactionId: String): OrderResponse? {
 		val sql = "SELECT * FROM organisations_schema.orders WHERE merchant_id = ? AND transaction_id = ?"
 		return jdbcTemplate.query(sql, arrayOf(merchantId, UUID.fromString(transactionId))) { rs, _ ->
@@ -30,13 +37,6 @@ class OrderRepository(val dbItem: ItemRepository) {
 		return jdbcTemplate.query(sql, arrayOf(merchantId, merchantOrderId)) { rs, _ ->
 			populateOrderResponse(rs)
 		}.firstOrNull()
-	}
-
-	fun orderBy(merchantId: String): List<OrderResponse> {
-		val sql = "SELECT * FROM organisations_schema.orders WHERE merchant_id = ? "
-		return jdbcTemplate.query(sql, arrayOf(merchantId)) { rs, _ ->
-			populateOrderResponse(rs)
-		}
 	}
 
 	fun create(merchantId: String, orderRequest: OrderRequest): UUID {
@@ -91,6 +91,6 @@ class OrderRepository(val dbItem: ItemRepository) {
 		buyerId = rs.getString("buyer_id"),
 		status = OrderStatus.valueOf(rs.getString("status")),
 		orderCreatedAt = rs.getTimestamp("order_created_at").toLocalDateTime(),
-		items = dbItem.retrieveItemsByOrder(rs.getObject("transaction_id", UUID::class.java))
+		items = dbItem.retrieveItemBy(rs.getObject("transaction_id", UUID::class.java))
 	)
 }

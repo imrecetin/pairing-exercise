@@ -44,7 +44,7 @@ class MerchantResource(val order: OrderService) {
 		]
 	)
 	fun orders(@PathVariable("merchantId") merchantId: String): List<OrderResponse> {
-		val foundOrders = order.allOrders(merchantId)
+		val foundOrders = order.ordersBy(merchantId)
 		if (CollectionUtils.isEmpty(foundOrders)) {
 			throw ResponseStatusException(
 				HttpStatus.NO_CONTENT,
@@ -74,7 +74,7 @@ class MerchantResource(val order: OrderService) {
 		]
 	)
 	fun orderBy(@PathVariable("merchantId") merchantId: String, @PathVariable("transactionId") transactionId: String): OrderResponse {
-		val foundOrderResponse = order.findOrderBy(merchantId, transactionId)
+		val foundOrderResponse = order.orderBy(merchantId, transactionId)
 		if (!foundOrderResponse.isPresent) {
 			throw ResponseStatusException(
 				HttpStatus.NO_CONTENT,
